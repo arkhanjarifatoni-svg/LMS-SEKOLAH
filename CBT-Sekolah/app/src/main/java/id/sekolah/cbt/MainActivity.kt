@@ -122,10 +122,29 @@ class MainActivity : ComponentActivity() {
         prefs.edit().putInt("local_violations", violations).apply()
     }
 
+
     private fun validateMoodleUrl(raw: String): URI? = try {
-        val uri = URI(raw.trim())
-        if (uri.scheme.equals("https", true) && !uri.host.isNullOrBlank() && uri.userInfo == null) uri else null
-    } catch (_: Exception) { null }
+    val uri = URI(raw.trim())
+
+    val validScheme =
+        uri.scheme.equals("https", true) ||
+        uri.scheme.equals("http", true)
+
+    if (
+        validScheme &&
+        !uri.host.isNullOrBlank() &&
+        uri.userInfo == null &&
+        uri.query == null &&
+        uri.fragment == null
+    ) {
+        uri
+    } else {
+        null
+    }
+    } catch (_: Exception) {
+    null
+    }
+
 
     private fun parseExtraHosts(raw: String): Set<String>? {
         if (raw.isBlank()) return emptySet()
@@ -324,7 +343,7 @@ private fun MoodleBrowserScreen(
                     webViewClient = object : WebViewClient() {
                         override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
                             val uri = request.url
-                            val allowed = uri.scheme.equals("https", true) && !uri.host.isNullOrBlank() && isHostAllowed(uri.host!!)
+                            val allowed = (uri.scheme.equals("https", true) ||uri.scheme.equals("http", true)) && !uri.host.isNullOrBlank() && isHostAllowed(uri.host!!)
                             if (!allowed) {
                                 blockedMessage = "Navigasi eksternal diblokir / External navigation blocked"
                                 Toast.makeText(context, blockedMessage, Toast.LENGTH_SHORT).show()
